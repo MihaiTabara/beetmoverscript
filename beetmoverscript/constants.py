@@ -184,3 +184,4 @@ INSTALLER_ARTIFACTS = (
 # are considered too suspicious, so we bail out on them.
 DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB = 100
 ZIP_MAX_COMPRESSION_RATIO = 10
+SNAPSHOT_TIMESTAMP_REGEX = r'\d{8}\.\d{6}-\d{1}'
