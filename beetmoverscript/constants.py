@@ -99,6 +99,9 @@ RESTRICTED_BUCKET_PATHS = {
     'maven-staging': [
         'maven2/',
     ],
+    'maven-snapshot-staging': [
+        'maven2/',
+    ],
 }
 
 # actions that imply actual releases, hence the need of `build_number` and
@@ -117,6 +120,7 @@ PARTNER_REPACK_ACTIONS = (
 
 MAVEN_ACTIONS = (
     'push-to-maven',
+    'push-to-snapshot-maven'
 )
 
 # XXX this is a fairly clunky way of specifying which files to copy from
