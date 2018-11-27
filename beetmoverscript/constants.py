@@ -120,7 +120,6 @@ PARTNER_REPACK_ACTIONS = (
 
 MAVEN_ACTIONS = (
     'push-to-maven',
-    'push-to-snapshot-maven'
 )
 
 # XXX this is a fairly clunky way of specifying which files to copy from

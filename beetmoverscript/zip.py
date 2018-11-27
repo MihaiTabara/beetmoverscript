@@ -201,13 +201,13 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
         if 'SNAPSHOT' in mapping_manifest['s3_bucket_path']:
             (date, clock, bno) = _extract_and_check_timestamps(file_,
                                                                SNAPSHOT_TIMESTAMP_REGEX)
-            # reload the unique_expected_files with their corresponding values
-            # by rendering them via jsone
             _ = {
                 'date_timestamp': date,
                 'clock_timestamp': clock,
                 'build_number': bno
             }
+            # reload the unique_expected_files with their corresponding values
+            # by rendering them via jsone
             rendered_unique_expected_files = set([jsone.render(f, _) for f in unique_expected_files])
             identifiers_collection.append(frozenset(_.items()))
         if file_ not in rendered_unique_expected_files:

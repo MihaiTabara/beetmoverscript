@@ -282,7 +282,7 @@ action_map = {
     # push to candidates is at this point identical to push_to_nightly
     'push-to-candidates': push_to_nightly,
     'push-to-releases': push_to_releases,
-    'push-to-snapshot-maven': push_to_snapshot_maven,
+    'push-to-maven': push_to_maven,
 }
 
 
@@ -617,9 +617,9 @@ async def upload_to_s3(context, s3_key, path):
     url = s3.generate_presigned_url('put_object', api_kwargs, ExpiresIn=1800, HttpMethod='PUT')
 
     log.info("upload_to_s3: %s -> s3://%s/%s", path, api_kwargs.get('Bucket'), s3_key)
-    # await retry_async(put, args=(context, url, headers, path),
-                      # retry_exceptions=(Exception, ),
-                      # kwargs={'session': context.session})
+    await retry_async(put, args=(context, url, headers, path),
+                      retry_exceptions=(Exception, ),
+                      kwargs={'session': context.session})
 
 
 def setup_mimetypes():
