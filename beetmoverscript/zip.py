@@ -1,3 +1,4 @@
+from copy import deepcopy
 import datetime
 import logging
 import os
@@ -217,6 +218,8 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
             )
     identifiers_collection_set = set(identifiers_collection)
     if len(identifiers_collection_set) > 1:
+        # bail if there are different timestamps across the same
+        # target.maven.zip files
         raise TaskVerificationError(
             'Multiple timestamps identified along the archive files {}'.format(
                 zip_path
@@ -226,9 +229,12 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
         # use this unique identifier per artifacts_id zip archive to munge and
         # populate the mapping_manifest
         kwargs = dict(next(iter(identifiers_collection_set)))
-        # TODO: render mapping_manifest here recursively with `kwargs`
-
-
+        rendered_mapping = deepcopy(mapping_manifest)
+        for locale, value in mapping_manifest['mapping'].items():
+            rendered_mapping['mapping'][locale] = f(value, kwargs)
+        # munge the original mapping with the rendered counterpart
+        for locale, value in rendered_mapping['mapping'].items():
+            mapping_manifest['mapping'][locale] = rendered_mapping['mapping'][locale]
     if len(files_in_archive) != len(unique_expected_files):
         missing_expected_files = [file for file in unique_expected_files if file not in files_in_archive]
         raise TaskVerificationError(
@@ -236,6 +242,19 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
         )
 
     log.info('Archive "{}" contains all expected files: {}'.format(zip_path, unique_expected_files))
+
+
+def f(d, kwargs):
+    def _rendering(s, _):
+        return jsone.render(s, _)
+
+    rendered_dict = {}
+    for artifact_name, artifact_info in d.items():
+        rendered_dict[_rendering(artifact_name, kwargs)] = {
+            'destinations': [_rendering(x, kwargs) for x in artifact_info['destinations']],
+            's3_key': _rendering(artifact_info['s3_key'], kwargs),
+        }
+    return rendered_dict
 
 
 def _extract_and_check_timestamps(archive_filename, regex):
