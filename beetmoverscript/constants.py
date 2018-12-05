@@ -102,6 +102,9 @@ RESTRICTED_BUCKET_PATHS = {
     'maven-snapshot-staging': [
         'maven2/',
     ],
+    'maven-snapshot-production': [
+        'maven2/',
+    ],
 }
 
 # actions that imply actual releases, hence the need of `build_number` and
