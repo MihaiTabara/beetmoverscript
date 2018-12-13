@@ -456,6 +456,30 @@ def test_beetmover_template_args_maven(context, branch, version, artifact_id,
             generate_beetmover_template_args(context)
 
 
+@pytest.mark.parametrize('branch, version, artifact_id, expected_version', ((
+    '', '1.0.1-SNAPSHOT', 'browser-session', '1.0.1'
+), (
+    '', '0.25.2-SNAPSHOT', 'browser-session', '0.25.2'
+)))
+def test_beetmover_template_args_maven_snapshot(context, branch, version, artifact_id,
+                                                expected_version):
+    context.bucket = 'maven'
+    context.action = 'push-to-maven'
+    context.task['payload']['version'] = version
+    context.task['payload']['artifact_id'] = artifact_id
+    context.release_props['branch'] = branch
+    # there's inherited buildid here from the context fixture
+    del context.release_props['buildid']
+    context.release_props['appName'] = 'geckoview'
+
+    assert generate_beetmover_template_args(context) == {
+        'artifact_id': artifact_id,
+        'template_key': 'maven_geckoview',
+        'version': expected_version,
+        'snapshot_version': version,
+    }
+
+
 @pytest.mark.parametrize('locale_in_payload, locales_in_upstream_artifacts, raises', ((
     'en-US', [], False,
 ), (
