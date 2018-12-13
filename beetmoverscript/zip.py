@@ -5,12 +5,12 @@ import os
 import re
 import zipfile
 
-import jsone
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import (
     ZIP_MAX_COMPRESSION_RATIO, SNAPSHOT_TIMESTAMP_REGEX
 )
+from beetmoverscript.utils import JINJA_ENV
 
 log = logging.getLogger(__name__)
 
@@ -208,7 +208,9 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
             }
             # reload the unique_expected_files with their corresponding values
             # by rendering them via jsone
-            rendered_unique_expected_files = set([jsone.render(f, _) for f in unique_expected_files])
+            rendered_unique_expected_files = set([
+                JINJA_ENV.from_string(f).render(**_) for f in unique_expected_files
+            ])
             identifiers_collection.append(frozenset(_.items()))
         if file_ not in rendered_unique_expected_files:
             raise TaskVerificationError(
@@ -246,7 +248,7 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
 
 def render_dict(d, kwargs):
     def _rendering(s, _):
-        return jsone.render(s, _)
+        return JINJA_ENV.from_string(s).render(**_)
 
     rendered_dict = {}
     for artifact_name, artifact_info in d.items():

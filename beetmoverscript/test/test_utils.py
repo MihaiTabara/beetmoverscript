@@ -477,6 +477,9 @@ def test_beetmover_template_args_maven_snapshot(context, branch, version, artifa
         'template_key': 'maven_geckoview',
         'version': expected_version,
         'snapshot_version': version,
+        'date_timestamp': '{{date_timestamp}}',
+        'clock_timestamp': '{{clock_timestamp}}',
+        'build_number': '{{build_number}}'
     }
 
 

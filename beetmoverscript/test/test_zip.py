@@ -329,8 +329,8 @@ def test_ensure_files_in_archive_have_decent_sizes(zip_metadata, zip_max_size_in
         'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20189929.145558-1.aar.sha1',
     ],
     [
-        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}.pom',
-        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}.aar.sha1',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.aar.sha1',
     ],
     {'s3_bucket_path': 'dummy-SNAPSHOT'},
     True,
@@ -340,8 +340,8 @@ def test_ensure_files_in_archive_have_decent_sizes(zip_metadata, zip_max_size_in
         'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20181129.MIXED-1.aar.sha1',
     ],
     [
-        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}.pom',
-        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}.aar.sha1',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.aar.sha1',
     ],
     {'s3_bucket_path': 'dummy-SNAPSHOT'},
     True,
@@ -351,8 +351,8 @@ def test_ensure_files_in_archive_have_decent_sizes(zip_metadata, zip_max_size_in
         'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20181129.-failure.aar.sha1',
     ],
     [
-        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}.pom',
-        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}.aar.sha1',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.aar.sha1',
     ],
     {'s3_bucket_path': 'dummy-SNAPSHOT'},
     True,
@@ -362,8 +362,8 @@ def test_ensure_files_in_archive_have_decent_sizes(zip_metadata, zip_max_size_in
         'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20181130.145558-1.aar.sha1',
     ],
     [
-        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}.pom',
-        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}.aar.sha1',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.pom',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}.aar.sha1',
     ],
     {'s3_bucket_path': 'dummy-SNAPSHOT'},
     True,
@@ -373,24 +373,24 @@ def test_ensure_files_in_archive_have_decent_sizes(zip_metadata, zip_max_size_in
         'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-20181129.145558-1-sources.jar.md5',
     ],
     [
-        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}-sources.jar',
-        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}-sources.jar.md5',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar',
+        'org/mzl/components/browser-awesomebar/X.Y.Z-SNAPSHOT/browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar.md5',
     ],
     {
         's3_bucket_path': 'dummy-SNAPSHOT',
         'mapping': {
             'en-US': {
-                'browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}-sources.jar': {
+                'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar': {
                     'destinations': [
-                        'browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}-sources.jar'
+                        'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar'
                     ],
-                    's3_key': 'browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}-sources.jar',
+                    's3_key': 'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar',
                 },
-                'browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}-sources.jar.md5': {
+                'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar.md5': {
                     'destinations': [
-                        'browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}-sources.jar.md5'
+                        'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar.md5'
                     ],
-                    's3_key': 'browser-awesomebar-X.Y.Z-${date_timestamp}.${clock_timestamp}-${build_number}-sources.jar.md5'
+                    's3_key': 'browser-awesomebar-X.Y.Z-{{date_timestamp}}.{{clock_timestamp}}-{{build_number}}-sources.jar.md5'
                 }
             }
         }
