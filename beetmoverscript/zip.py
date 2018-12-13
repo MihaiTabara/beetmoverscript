@@ -231,7 +231,7 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
         kwargs = dict(next(iter(identifiers_collection_set)))
         rendered_mapping = deepcopy(mapping_manifest)
         for locale, value in mapping_manifest['mapping'].items():
-            rendered_mapping['mapping'][locale] = f(value, kwargs)
+            rendered_mapping['mapping'][locale] = render_dict(value, kwargs)
         # munge the original mapping with the rendered counterpart
         for locale, value in rendered_mapping['mapping'].items():
             mapping_manifest['mapping'][locale] = rendered_mapping['mapping'][locale]
@@ -244,7 +244,7 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
     log.info('Archive "{}" contains all expected files: {}'.format(zip_path, unique_expected_files))
 
 
-def f(d, kwargs):
+def render_dict(d, kwargs):
     def _rendering(s, _):
         return jsone.render(s, _)
 
