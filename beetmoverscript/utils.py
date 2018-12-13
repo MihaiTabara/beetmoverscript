@@ -10,6 +10,7 @@ import re
 import yaml
 
 from mozilla_version.maven import MavenVersion
+from mozilla_version.gecko import FirefoxVersion
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import (
@@ -180,7 +181,11 @@ def _generate_beetmover_template_args_maven(task, release_props):
     }
 
     # Change version number to major.minor.buildId because that's what the build task produces
-    payload_version = MavenVersion.parse(task['payload']['version'])
+
+    if 'SNAPSHOT' in task['payload']['version']:
+        payload_version = MavenVersion.parse(task['payload']['version'])
+    else:
+        payload_version = FirefoxVersion.parse(task['payload']['version'])
     version = [payload_version.major_number,
                payload_version.minor_number,
                release_props.get('buildid', payload_version.patch_number)]
@@ -188,7 +193,7 @@ def _generate_beetmover_template_args_maven(task, release_props):
         raise TaskVerificationError('At least one digit is undefined. Got: {}'.format(version))
     tmpl_args['version'] = '.'.join(str(n) for n in version)
 
-    if payload_version.is_snapshot:
+    if isinstance(payload_version, MavenVersion) and payload_version.is_snapshot:
         tmpl_args['snapshot_version'] = payload_version
 
     return tmpl_args
