@@ -180,12 +180,13 @@ def _generate_beetmover_template_args_maven(task, release_props):
         'template_key': 'maven_{}'.format(release_props['appName']),
     }
 
-    # Change version number to major.minor.buildId because that's what the build task produces
-
+    # FIXME: this is a temporarily solution while we sanitize the payload
+    # under https://github.com/mozilla-releng/beetmoverscript/issues/196
     if 'SNAPSHOT' in task['payload']['version']:
         payload_version = MavenVersion.parse(task['payload']['version'])
     else:
         payload_version = FirefoxVersion.parse(task['payload']['version'])
+    # Change version number to major.minor.buildId because that's what the build task produces
     version = [payload_version.major_number,
                payload_version.minor_number,
                release_props.get('buildid', payload_version.patch_number)]
