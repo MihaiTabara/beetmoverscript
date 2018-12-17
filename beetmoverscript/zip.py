@@ -1,4 +1,3 @@
-from copy import deepcopy
 import datetime
 import logging
 import os
@@ -186,6 +185,7 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
 
     identifiers_collection = []
     rendered_unique_expected_files = unique_expected_files
+    _args = {}
 
     for file_ in files_in_archive:
         if os.path.isabs(file_):
@@ -201,17 +201,17 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
         if 'SNAPSHOT' in mapping_manifest['s3_bucket_path']:
             (date, clock, bno) = _extract_and_check_timestamps(file_,
                                                                SNAPSHOT_TIMESTAMP_REGEX)
-            _ = {
+            _args = {
                 'date_timestamp': date,
                 'clock_timestamp': clock,
                 'build_number': bno
             }
             # reload the unique_expected_files with their corresponding values
-            # by rendering them via jsone
+            # by rendering them via Jinja2 variables
             rendered_unique_expected_files = set([
-                JINJA_ENV.from_string(f).render(**_) for f in unique_expected_files
+                JINJA_ENV.from_string(f).render(**_args) for f in unique_expected_files
             ])
-            identifiers_collection.append(frozenset(_.items()))
+            identifiers_collection.append(frozenset(_args.items()))
         if file_ not in rendered_unique_expected_files:
             raise TaskVerificationError(
                 'File "{}" present in archive "{}" is not expected. Expected: {}'.format(
@@ -220,23 +220,19 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
             )
     identifiers_collection_set = set(identifiers_collection)
     if len(identifiers_collection_set) > 1:
-        # bail if there are different timestamps across the same
+        # bail if there are different timestamps or buildnumbers across the same
         # target.maven.zip files
         raise TaskVerificationError(
-            'Multiple timestamps identified along the archive files {}'.format(
+            'Different buildnumbers/timestamps identified within the archive {}'.format(
                 zip_path
             )
         )
     elif len(identifiers_collection_set) == 1:
         # use this unique identifier per artifacts_id zip archive to munge and
         # populate the mapping_manifest
-        kwargs = dict(next(iter(identifiers_collection_set)))
-        rendered_mapping = deepcopy(mapping_manifest)
         for locale, value in mapping_manifest['mapping'].items():
-            rendered_mapping['mapping'][locale] = render_dict(value, kwargs)
-        # munge the original mapping with the rendered counterpart
-        for locale, value in rendered_mapping['mapping'].items():
-            mapping_manifest['mapping'][locale] = rendered_mapping['mapping'][locale]
+            mapping_manifest['mapping'][locale] = render_dict(value, _args)
+
     if len(files_in_archive) != len(unique_expected_files):
         missing_expected_files = [file for file in unique_expected_files if file not in files_in_archive]
         raise TaskVerificationError(
@@ -247,14 +243,17 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
 
 
 def render_dict(d, kwargs):
-    def _rendering(s, _):
-        return JINJA_ENV.from_string(s).render(**_)
+    """ Function to render a nested Python-dict structure to fill in all Jinja2
+    variables"""
+    def render_dict_(string, dict_to_render):
+        """ Function to render any Jinja2 variables for a given string"""
+        return JINJA_ENV.from_string(string).render(**dict_to_render)
 
     rendered_dict = {}
     for artifact_name, artifact_info in d.items():
-        rendered_dict[_rendering(artifact_name, kwargs)] = {
-            'destinations': [_rendering(x, kwargs) for x in artifact_info['destinations']],
-            's3_key': _rendering(artifact_info['s3_key'], kwargs),
+        rendered_dict[render_dict_(artifact_name, kwargs)] = {
+            'destinations': [render_dict_(x, kwargs) for x in artifact_info['destinations']],
+            's3_key': render_dict_(artifact_info['s3_key'], kwargs),
         }
     return rendered_dict
 
