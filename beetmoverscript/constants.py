@@ -192,4 +192,3 @@ DEFAULT_ZIP_MAX_FILE_SIZE_IN_MB = 300
 # of redundancy (e.g.: files full of zeros). Let beetmover only deal with regular cases. Edge cases
 # are considered too suspicious, so we bail out on them.
 ZIP_MAX_COMPRESSION_RATIO = 10
-SNAPSHOT_TIMESTAMP_REGEX = r'\d{8}\.\d{6}-\d{1}'

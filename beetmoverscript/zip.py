@@ -1,23 +1,19 @@
-import datetime
 import logging
 import os
-import re
 import zipfile
 
 from scriptworker.exceptions import TaskVerificationError
 
 from beetmoverscript.constants import (
-    ZIP_MAX_COMPRESSION_RATIO, SNAPSHOT_TIMESTAMP_REGEX
+    ZIP_MAX_COMPRESSION_RATIO
 )
-from beetmoverscript.utils import JINJA_ENV
 
 log = logging.getLogger(__name__)
 
 
 def check_and_extract_zip_archives(artifacts_per_task_id,
                                    expected_files_per_archive_per_task_id,
-                                   zip_max_size_in_mb,
-                                   mapping_manifest):
+                                   zip_max_size_in_mb):
     """Verify zip archives and extract them.
 
     This function enhances the checks done in python's zipfile. Each of the zip file passed is
@@ -47,8 +43,6 @@ def check_and_extract_zip_archives(artifacts_per_task_id,
         zip_max_size_in_mb (int): if an archive or a file within the archive is bigger than this
         value, then the archive is considered invalid.
 
-        mapping_manifest (dict): a dictionary keyed by artifact name.
-
     Raises:
         TaskVerificationError: whenever an archive breaks one of the rules stated above
 
@@ -68,7 +62,7 @@ def check_and_extract_zip_archives(artifacts_per_task_id,
             expected_files_per_archive = expected_files_per_archive_per_task_id[task_id]
             # No need to key deflated_artifacts by task_id. task_id is already in the full path of the archive
             deflated_artifacts.update(_check_and_extract_zip_archives_for_given_task(
-                task_id, expected_files_per_archive, zip_max_size_in_mb, mapping_manifest
+                task_id, expected_files_per_archive, zip_max_size_in_mb,
             ))
 
     log.info('Extracted these files: {}'.format(deflated_artifacts))
@@ -77,13 +71,13 @@ def check_and_extract_zip_archives(artifacts_per_task_id,
 
 
 def _check_and_extract_zip_archives_for_given_task(task_id, expected_files_per_archive,
-                                                   zip_max_size_in_mb, mapping_manifest):
+                                                   zip_max_size_in_mb):
     extracted_files = {}
 
     for archive_path, expected_files in expected_files_per_archive.items():
         log.info('Processing archive "{}" which marked as `zipExtract`able'.format(archive_path))
         extracted_files[archive_path] = _check_extract_and_delete_zip_archive(
-            archive_path, expected_files, zip_max_size_in_mb, mapping_manifest
+            archive_path, expected_files, zip_max_size_in_mb,
         )
 
     # We make this check at this stage (and not when all files from all tasks got extracted)
@@ -95,7 +89,7 @@ def _check_and_extract_zip_archives_for_given_task(task_id, expected_files_per_a
 
 
 def _check_extract_and_delete_zip_archive(zip_path, expected_files,
-                                          zip_max_size_in_mb, mapping_manifest):
+                                          zip_max_size_in_mb):
     _check_archive_itself(zip_path, zip_max_size_in_mb)
 
     with zipfile.ZipFile(zip_path) as zip_file:
@@ -105,7 +99,7 @@ def _check_extract_and_delete_zip_archive(zip_path, expected_files,
         # we don't close the file descriptor here to avoid the tested file to be swapped by a rogue one
         _ensure_files_in_archive_have_decent_sizes(zip_path, zip_metadata, zip_max_size_in_mb)
         _ensure_all_expected_files_are_present_in_archive(zip_path, relative_paths_in_archive,
-                                                          expected_files, mapping_manifest)
+                                                          expected_files)
         log.info('Content of archive "{}" is sane'.format(zip_path))
 
         extracted_files = _extract_and_check_output_files(zip_file, relative_paths_in_archive)
@@ -172,8 +166,7 @@ def _ensure_files_in_archive_have_decent_sizes(zip_path, zip_metadata, zip_max_s
     log.info('Archive "{}" contains files with legitimate sizes.'.format(zip_path))
 
 
-def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive,
-                                                      expected_files, mapping_manifest):
+def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive, expected_files):
     files_in_archive = set(files_in_archive)
 
     unique_expected_files = set(expected_files)
@@ -182,10 +175,6 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
         raise TaskVerificationError(
             'Found duplicated expected files in archive "{}": {}'.format(zip_path, duplicated_files)
         )
-
-    identifiers_collection = []
-    rendered_unique_expected_files = unique_expected_files
-    _args = {}
 
     for file_ in files_in_archive:
         if os.path.isabs(file_):
@@ -198,40 +187,12 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
                     file_, zip_path
                 )
             )
-        if mapping_manifest and 'SNAPSHOT' in mapping_manifest['s3_bucket_path']:
-            (date, clock, bno) = _extract_and_check_timestamps(file_,
-                                                               SNAPSHOT_TIMESTAMP_REGEX)
-            _args = {
-                'date_timestamp': date,
-                'clock_timestamp': clock,
-                'build_number': bno
-            }
-            # reload the unique_expected_files with their corresponding values
-            # by rendering them via Jinja2 variables
-            rendered_unique_expected_files = set([
-                JINJA_ENV.from_string(f).render(**_args) for f in unique_expected_files
-            ])
-            identifiers_collection.append(frozenset(_args.items()))
-        if file_ not in rendered_unique_expected_files:
+        if file_ not in unique_expected_files:
             raise TaskVerificationError(
                 'File "{}" present in archive "{}" is not expected. Expected: {}'.format(
                     file_, zip_path, unique_expected_files
                 )
             )
-    identifiers_collection_set = set(identifiers_collection)
-    if len(identifiers_collection_set) > 1:
-        # bail if there are different timestamps or buildnumbers across the same
-        # target.maven.zip files
-        raise TaskVerificationError(
-            'Different buildnumbers/timestamps identified within the archive {}'.format(
-                zip_path
-            )
-        )
-    elif len(identifiers_collection_set) == 1:
-        # use this unique identifier per artifacts_id zip archive to munge and
-        # populate the mapping_manifest
-        for locale, value in mapping_manifest['mapping'].items():
-            mapping_manifest['mapping'][locale] = render_dict(value, _args)
 
     if len(files_in_archive) != len(unique_expected_files):
         missing_expected_files = [file for file in unique_expected_files if file not in files_in_archive]
@@ -240,48 +201,6 @@ def _ensure_all_expected_files_are_present_in_archive(zip_path, files_in_archive
         )
 
     log.info('Archive "{}" contains all expected files: {}'.format(zip_path, unique_expected_files))
-
-
-def render_dict(d, kwargs):
-    """ Function to render a nested Python-dict structure to fill in all Jinja2
-    variables"""
-    def render_dict_(string, dict_to_render):
-        """ Function to render any Jinja2 variables for a given string"""
-        return JINJA_ENV.from_string(string).render(**dict_to_render)
-
-    rendered_dict = {}
-    for artifact_name, artifact_info in d.items():
-        rendered_dict[render_dict_(artifact_name, kwargs)] = {
-            'destinations': [render_dict_(x, kwargs) for x in artifact_info['destinations']],
-            's3_key': render_dict_(artifact_info['s3_key'], kwargs),
-        }
-    return rendered_dict
-
-
-def _extract_and_check_timestamps(archive_filename, regex):
-    match = re.search(regex, archive_filename)
-    try:
-        identifier = match.group()
-    except AttributeError:
-        raise TaskVerificationError(
-            'File "{}" present in archive has invalid identifier. '
-            'Expected YYYYMMDD.HHMMSS-BUILDNUMBER within in'.format(
-                archive_filename
-            )
-        )
-    timestamp, build_number = identifier.split('-')
-    try:
-        datetime.datetime.strptime(timestamp, '%Y%m%d.%H%M%S')
-    except ValueError:
-        raise TaskVerificationError(
-            'File "{}" present in archive has invalid timestamp. '
-            'Expected YYYYMMDD.HHMMSS within in'.format(
-                archive_filename
-            )
-        )
-
-    date_timestamp, clock_timestamp = timestamp.split('.')
-    return date_timestamp, clock_timestamp, build_number
 
 
 def _extract_and_check_output_files(zip_file, relative_path_in_archive):
